@@ -209,100 +209,105 @@ void on_priv_timer_tick() {
 // Called on PS/2 interrupt
 void on_ps2_press() {
     volatile int * ps2_base = (int *) PS2_BASE;
-    int RVALID;
     volatile char data;
+	volatile int PS2_data, RVALID;
 
     //RVALID = *ps2_base & 0x8000;
     //if (RVALID) {
-        while (*(ps2_base+1) & 0b100000000) {
-            data = *ps2_base & 0xFF;
-            if (data == EXTENDED_KEYS) {
-                // Extended Key Press
-                data = *ps2_base & 0xFF;
-                bool is_break = false;
-                if (data == BREAK) {
-                    // Is Break
-                    is_break = true;
-                    data = *ps2_base & 0xFF;
-                }
-                if (data == RIGHT_ARROW) {
-                    // Right Arrow
-                    if (GAME_STATE.MODE == GAME) {
-                        PLAYER.move_right = !is_break;
-                        bool b1 = is_break;
-                        bool b2 = SETTINGS.CONTROL_SCHEME == DISCRETE;
-                        bool b3 = SETTINGS.INPUT_TYPE == KEYBOARD;
-                        if (b1)
-                            turnOnLED(1);
-                        if (b2)
-                            turnOnLED(2);
-                        if (b3)
-                            turnOnLED(3);
-                        if (is_break && SETTINGS.CONTROL_SCHEME == DISCRETE && SETTINGS.INPUT_TYPE == KEYBOARD) {
-                            turnOnLED(4);
-                            movePlayerRight(&PLAYER);
-                        }
-                    } else if (GAME_STATE.MODE == TITLE) {
-                        TITLE_INDEX = (TITLE_INDEX + 1) % TITLE_SIZE;
-                    } else if (GAME_STATE.MODE == OPTIONS) {
-                        cycleOptionRight();
-                    }
-                } else if (data == LEFT_ARROW) {
-                    // Left Arrow
-                    if (GAME_STATE.MODE == GAME) {
-                        PLAYER.move_left = !is_break;
-                        if (is_break && SETTINGS.CONTROL_SCHEME == DISCRETE && SETTINGS.INPUT_TYPE == KEYBOARD)
-                            movePlayerLeft(&PLAYER);
-                    } else if (GAME_STATE.MODE == TITLE) {
-                        TITLE_INDEX = (TITLE_SIZE + TITLE_INDEX - 1) % TITLE_SIZE;
-                    } else if (GAME_STATE.MODE == OPTIONS) {
-                        cycleOptionLeft();
-                    }
-                } else if (data == UP_ARROW) {
-                    // Up Arrow
-                    if (is_break && GAME_STATE.MODE == OPTIONS) {
-                        choosePreviousOption();
-                    }
-                } else if (data == DOWN_ARROW) {
-                    // Down Arrow
-                    if (is_break && GAME_STATE.MODE == OPTIONS) {
-                        chooseNextOption();
-                    }
-                }
-            } else {
-                // Non Extended Key Press
-                bool is_break = false;
-                if (data == BREAK) {
-                    // Is Break
-                    is_break = true;
-                    data = *ps2_base & 0xFF;
-                }
-                if (data == ENTER_KEY) {
-                    // Enter Key
-                    if (is_break && GAME_STATE.MODE == TITLE) {
-                        if (TITLE_INDEX == 0) {
-                            GAME_STATE.MODE = GAME;
-                            INIT_GAME_REQUEST = true;
-                        } else if (TITLE_INDEX == 1) {
-                            GAME_STATE.MODE = OPTIONS;
-                            OPTIONS_INDEX = 0;
-                        }
-                    }
-                } else if (data == SPACE_KEY) {
-                    // Space Key
-                    if (is_break && GAME_STATE.MODE == TITLE)
-                        GAME_STATE.MODE = GAME;
-                } else if (data == ESC) {
-                    // Escape Key
-                    if (is_break && GAME_STATE.MODE == GAME) {
-                        GAME_STATE.MODE = TITLE;
-                        TITLE_INDEX = 0;
-                    } else if (is_break && GAME_STATE.MODE == OPTIONS) {
-                        GAME_STATE.MODE = TITLE;
-                        TITLE_INDEX = 1;
-                    }
-                }
-            }
-        }
-    //}
+	while (*(ps2_base+1) & 0b100000000) {
+		do {
+			PS2_data = * ps2_base;
+			RVALID = PS2_data & 0x8000;
+		} while (!RVALID);
+		data = PS2_data & 0xFF;
+		if (data == EXTENDED_KEYS) {
+			// Extended Key Press
+			do {
+				PS2_data = * ps2_base;
+				RVALID = PS2_data & 0x8000;
+			} while (!RVALID);
+			data = PS2_data & 0xFF;
+			bool is_break = false;
+			if (data == BREAK) {
+				// Is Break
+				is_break = true;
+				do {
+					PS2_data = * ps2_base;
+					RVALID = PS2_data & 0x8000;
+				} while (!RVALID);
+				data = PS2_data & 0xFF;
+			}
+			if (data == RIGHT_ARROW) {
+				// Right Arrow
+				if (GAME_STATE.MODE == GAME) {
+					PLAYER.move_right = !is_break;
+					if (is_break && SETTINGS.CONTROL_SCHEME == DISCRETE && SETTINGS.INPUT_TYPE == KEYBOARD) {
+						movePlayerRight(&PLAYER);
+					}
+				} else if (GAME_STATE.MODE == TITLE) {
+					TITLE_INDEX = (TITLE_INDEX + 1) % TITLE_SIZE;
+				} else if (GAME_STATE.MODE == OPTIONS) {
+					cycleOptionRight();
+				}
+			} else if (data == LEFT_ARROW) {
+				// Left Arrow
+				if (GAME_STATE.MODE == GAME) {
+					PLAYER.move_left = !is_break;
+					if (is_break && SETTINGS.CONTROL_SCHEME == DISCRETE && SETTINGS.INPUT_TYPE == KEYBOARD)
+						movePlayerLeft(&PLAYER);
+				} else if (GAME_STATE.MODE == TITLE) {
+					TITLE_INDEX = (TITLE_SIZE + TITLE_INDEX - 1) % TITLE_SIZE;
+				} else if (GAME_STATE.MODE == OPTIONS) {
+					cycleOptionLeft();
+				}
+			} else if (data == UP_ARROW) {
+				// Up Arrow
+				if (is_break && GAME_STATE.MODE == OPTIONS) {
+					choosePreviousOption();
+				}
+			} else if (data == DOWN_ARROW) {
+				// Down Arrow
+				if (is_break && GAME_STATE.MODE == OPTIONS) {
+					chooseNextOption();
+				}
+			}
+		} else {
+			// Non Extended Key Press
+			bool is_break = false;
+			if (data == BREAK) {
+				// Is Break
+				is_break = true;
+				do {
+					PS2_data = * ps2_base;
+					RVALID = PS2_data & 0x8000;
+				} while (!RVALID);
+				data = PS2_data & 0xFF;
+			}
+			if (data == ENTER_KEY) {
+				// Enter Key
+				if (is_break && GAME_STATE.MODE == TITLE) {
+					if (TITLE_INDEX == 0) {
+						GAME_STATE.MODE = GAME;
+						INIT_GAME_REQUEST = true;
+					} else if (TITLE_INDEX == 1) {
+						GAME_STATE.MODE = OPTIONS;
+						OPTIONS_INDEX = 0;
+					}
+				}
+			} else if (data == SPACE_KEY) {
+				// Space Key
+				if (is_break && GAME_STATE.MODE == TITLE)
+					GAME_STATE.MODE = GAME;
+			} else if (data == ESC) {
+				// Escape Key
+				if (is_break && GAME_STATE.MODE == GAME) {
+					GAME_STATE.MODE = TITLE;
+					TITLE_INDEX = 0;
+				} else if (is_break && GAME_STATE.MODE == OPTIONS) {
+					GAME_STATE.MODE = TITLE;
+					TITLE_INDEX = 1;
+				}
+			}
+		}
+	}
 }
