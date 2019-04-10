@@ -242,9 +242,9 @@ void on_ps2_press() {
                     if (is_break && SETTINGS.CONTROL_SCHEME == DISCRETE && SETTINGS.INPUT_TYPE == KEYBOARD) {
                         movePlayerRight(&PLAYER);
                     }
-                } else if (GAME_STATE.MODE == TITLE) {
+                } else if (is_break && GAME_STATE.MODE == TITLE) {
                     TITLE_INDEX = (TITLE_INDEX + 1) % TITLE_SIZE;
-                } else if (GAME_STATE.MODE == OPTIONS) {
+                } else if (is_break && GAME_STATE.MODE == OPTIONS) {
                     cycleOptionRight();
                 }
             } else if (data == LEFT_ARROW) {
@@ -253,11 +253,11 @@ void on_ps2_press() {
                     PLAYER.move_left = !is_break;
                     if (is_break && SETTINGS.CONTROL_SCHEME == DISCRETE && SETTINGS.INPUT_TYPE == KEYBOARD)
                         movePlayerLeft(&PLAYER);
-                    } else if (GAME_STATE.MODE == TITLE) {
-                        TITLE_INDEX = (TITLE_SIZE + TITLE_INDEX - 1) % TITLE_SIZE;
-                    } else if (GAME_STATE.MODE == OPTIONS) {
-                        cycleOptionLeft();
-                    }
+                } else if (is_break && GAME_STATE.MODE == TITLE) {
+                    TITLE_INDEX = (TITLE_SIZE + TITLE_INDEX - 1) % TITLE_SIZE;
+                } else if (is_break && GAME_STATE.MODE == OPTIONS) {
+                    cycleOptionLeft();
+                }
             } else if (data == UP_ARROW) {
                 // Up Arrow
                 if (is_break && GAME_STATE.MODE == OPTIONS) {
