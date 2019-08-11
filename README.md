@@ -3,6 +3,8 @@ An implementation of the game "Super Hexagon" using C to program a DE1-SoC board
 
 The objective of the game is to move the player around the central hexagon to avoid collision with the incoming hexagons by navigating the player through the gaps.
 
+Game difficulty is increased by allowing the incoming hexagons as well as the game screen to rotate.
+
 ## Screenshots
 
 ![title_screenshot][title]
